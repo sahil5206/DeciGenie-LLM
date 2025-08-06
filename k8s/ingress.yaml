@@ -1,0 +1,45 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: decigenie-ingress
+  namespace: decigenie
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "decigenie-ip"
+    networking.gke.io/managed-certificates: "decigenie-cert"
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  rules:
+  - host: decigenie.your-domain.com  # Replace with your domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: frontend-service
+            port:
+              number: 80
+      - path: /api/
+        pathType: Prefix
+        backend:
+          service:
+            name: llm-query-service
+            port:
+              number: 8000
+      - path: /document-api/
+        pathType: Prefix
+        backend:
+          service:
+            name: document-ingestion
+            port:
+              number: 8001
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: decigenie-cert
+  namespace: decigenie
+spec:
+  domains:
+  - decigenie.your-domain.com  # Replace with your domain 

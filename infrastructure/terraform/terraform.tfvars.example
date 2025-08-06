@@ -1,0 +1,8 @@
+# Copy this file to terraform.tfvars and fill in your values
+project_id   = "your-gcp-project-id"
+region       = "us-central1"
+zone         = "us-central1-a"
+node_count   = 2
+machine_type = "e2-medium"
+db_password  = "your-secure-database-password"
+environment  = "production" 

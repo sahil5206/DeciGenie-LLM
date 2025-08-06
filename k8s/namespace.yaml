@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: decigenie
+  labels:
+    name: decigenie
+    app: decigenie-llm 

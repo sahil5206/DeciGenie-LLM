@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_DOCUMENT_SERVICE_URL=http://localhost:8001
+    depends_on:
+      - llm-query-service
+      - document-ingestion
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - decigenie-network
+
+  # LLM Query Service
+  llm-query-service:
+    build:
+      context: ./llm-query-service
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=development
+      - PORT=8000
+      - DATABASE_URL=postgresql://postgres:password@database:5432/decigenie
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    depends_on:
+      - database
+    volumes:
+      - ./llm-query-service:/app
+      - /app/node_modules
+    networks:
+      - decigenie-network
+
+  # Document Ingestion Service
+  document-ingestion:
+    build:
+      context: ./document-ingestion
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - NODE_ENV=development
+      - PORT=8001
+      - DATABASE_URL=postgresql://postgres:password@database:5432/decigenie
+      - UPLOAD_DIR=/app/uploads
+    depends_on:
+      - database
+    volumes:
+      - ./document-ingestion:/app
+      - /app/node_modules
+      - ./uploads:/app/uploads
+    networks:
+      - decigenie-network
+
+  # Database Service
+  database:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=decigenie
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - decigenie-network
+
+volumes:
+  postgres_data:
+
+networks:
+  decigenie-network:
+    driver: bridge 
