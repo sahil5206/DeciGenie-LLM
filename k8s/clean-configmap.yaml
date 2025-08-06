@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: decigenie-config
+  namespace: decigenie
+data:
+  NODE_ENV: "production"
+  FRONTEND_PORT: "3000"
+  LLM_QUERY_SERVICE_PORT: "8000"
+  DOCUMENT_INGESTION_PORT: "8001"
+  UPLOAD_DIR: "/app/uploads"
+  MAX_FILE_SIZE: "50MB" 

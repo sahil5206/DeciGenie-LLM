@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "decigenie-llm",
+  "private_key_id": "19c4689c14e9664938f69d13cc3acbe59356fe1e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDuoHzbC6AHb2US\npXe50H8uqv3/7MgPwZWSiv0rIyLE0XZxKwF+DmumO+6RBz6+WwaBedWDd6uxgBis\nsGwYFUIUhUkrz2ArxDxL54AiVZmevpOdR2TsxCGGdwwsoTyXEUvoMZm6VWN1+fUG\nH/Zj6P855pNvhvZ4/UVSa9E9UQ6l8TY6BmEtpOvc6MGG97Ua53WMCdOKKfgz7FKL\nZGcstXomZ4FieWVAzLeK3eF4RreA6GVfx80FW6BWIlf/TyIlIFunmSBH67FrSD/m\nTVwH24UDdZF0GLj0LobpClP5RnGncTGyteGiS8HzYLryx5MEKKmoWX7jozNiY+jw\nNGkaizXnAgMBAAECggEAIVyRqCQzbuatiFJW70UNiu5ADahCfiVv7ml9JKtIYKDy\nQLclAcUtWrPVUjRjmsRqH+7zIWq5N9szV+1gZ2uNbgYGaVgYV3YbgfcvLF2wWQfG\n5n3FR+7RyxVYv+KY8HvsE13f4rOucJ+OGJmeXnCEQkmQwk5ppheuueu1+K8c76kI\n7+KtY2bVS/3edDk4x72MZg+6cjYNJWk+o/WvHo6bqWS8UqX2VSAoDcvoUHfW6ag9\nYKgIHn8BLTaVmUBPBZ2Nzt8Bo7482PQd5N6fMIhinCJ6RWGn4XzTO7VV5yqb0Twp\nFRO3AZAwwFqBsamDXJNLWFaDOTN4cCjAqZ/LafjAPQKBgQD7Btsd+wic/7sCzQj3\nId9gNLyMqFVXz5HrfKgOZ+KnmNc1XF2xySb7mIjx/XCh7uULExYudUoS4CzHLNPp\nGrvcoSzed2iifdfseDEVEgeNQ2a+czT9WxKdM/hply1/QTyTEFaGGxbsfOKKi0Wi\nsyz2LmdZT+fozgWATP2JR0uGTQKBgQDzWr4mNTBXq4LBADXu2tVQAwuakGZLqkMS\nPXTN4u+79qYVh7pNhqMzWXIBAG1MePXtNfsteZZf17pWlf5vbYkSXl5/EOAGqne4\nZD9IyThBGydbsJQDQpZP0CC/oo385SMwsqOj9/6bhzGeRgeaV7LLP+P+VFSUgU7y\n7g2CFEKvAwKBgG6mXv+gH/PUZcKeTk1hCO2HUXVO3g+O12tNz2ZKNIZbwMEsrcAo\nQp60ZekFJhi7DQsMpsJjwPsBBbvl7qLZveVKxlRpnh3CCuOZN0lqYRnLlAZvEfR7\nqIDS37TrhoqJXwIUOY9zcW9cvR8EtPU6tZ7uZW/g4QClj5c2WKuiWZAhAoGAZXIW\ngmb52BIvV7V2xjODaO9cDvrTKge4HgpwfsNznK+dXKxQBbFypx1KYRCEf7SNEG3I\nX5SoExwjGaU9g8XttjKQwfeO7Dhz3/IqT3VSdhGTvq1FhnZjorHodPqWpi3/FXXi\nsZ/YC424KXqYAMc+SWxA5uzQtXeSKcMC7o7znXECgYEAttaA/0Z7Ud+CrKVd+qE+\nkzmi+GEc6gvs7ibC8ykaNL3murlOfp7E0g6D/wQnmIaJsy7w+qe4VYmOcw/pm2am\nd4mWoLpMU9oPbR0cyl/4AHiBWuBJxllh02lSq2eP3S6j2z3TdopGpgXz8knRFAIv\nug72BiY2KZYnMt4MUg8G02I=\n-----END PRIVATE KEY-----\n",
+  "client_email": "decigenie-terraform@decigenie-llm.iam.gserviceaccount.com",
+  "client_id": "117169784488708177794",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/decigenie-terraform%40decigenie-llm.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}

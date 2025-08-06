@@ -33,7 +33,8 @@ resource "google_project_service" "required_apis" {
     "iam.googleapis.com",
     "containerregistry.googleapis.com",
     "sql-component.googleapis.com",
-    "sqladmin.googleapis.com"
+    "sqladmin.googleapis.com",
+    "servicenetworking.googleapis.com"
   ])
 
   service = each.value
@@ -109,6 +110,23 @@ resource "google_container_node_pool" "primary_nodes" {
   }
 }
 
+# Create VPC peering for Cloud SQL
+resource "google_compute_global_address" "private_ip_address" {
+  name          = "decigenie-private-ip"
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = google_compute_network.vpc.id
+  depends_on    = [google_project_service.required_apis]
+}
+
+resource "google_service_networking_connection" "private_vpc_connection" {
+  network                 = google_compute_network.vpc.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
+  depends_on              = [google_project_service.required_apis]
+}
+
 # Create Cloud SQL instance
 resource "google_sql_database_instance" "instance" {
   name             = "decigenie-db-instance"
@@ -130,7 +148,7 @@ resource "google_sql_database_instance" "instance" {
   }
 
   deletion_protection = false
-  depends_on          = [google_project_service.required_apis]
+  depends_on          = [google_service_networking_connection.private_vpc_connection]
 }
 
 # Create database
