@@ -1,155 +1,132 @@
-const fs = require('fs-extra');
 const path = require('path');
-const pdfParse = require('pdf-parse');
+const fs = require('fs-extra');
+const pdf = require('pdf-parse');
 const mammoth = require('mammoth');
-const { query } = require('../config/database');
+const { v4: uuidv4 } = require('uuid');
+const { query, run } = require('../config/database');
 
 class DocumentProcessor {
   constructor() {
-    this.supportedFormats = ['.pdf', '.docx', '.txt'];
     this.maxFileSize = 50 * 1024 * 1024; // 50MB
-    this.chunkSize = 1000; // characters per chunk
-    this.chunkOverlap = 200; // characters overlap between chunks
+    this.supportedFormats = ['.pdf', '.docx', '.txt'];
   }
 
   async processDocument(filePath, originalFilename, userId = 'test@example.com') {
     try {
+      console.log(`Processing document: ${originalFilename}`);
+
+      // Extract text from document
       const fileExtension = path.extname(originalFilename).toLowerCase();
-      
-      if (!this.supportedFormats.includes(fileExtension)) {
-        throw new Error(`Unsupported file format: ${fileExtension}`);
+      const extractedText = await this.extractText(filePath, fileExtension);
+
+      if (!extractedText || extractedText.trim().length === 0) {
+        throw new Error('No text could be extracted from the document');
       }
 
-      // Read and extract text from document
-      const text = await this.extractText(filePath, fileExtension);
-      
-      if (!text || text.trim().length === 0) {
-        throw new Error('No text content found in document');
-      }
-
-      // Create document record in database
+      // Create document record
       const documentId = await this.createDocumentRecord(originalFilename, filePath, fileExtension, userId);
-      
-      // Chunk the text and store in database
-      const chunks = this.createChunks(text);
+
+      // Create chunks from text
+      const chunks = this.createChunks(extractedText);
+
+      // Store chunks
       await this.storeChunks(documentId, chunks);
 
-      // Update document status
-      await query(
-        'UPDATE documents SET status = $1 WHERE id = $2',
-        ['processed', documentId]
-      );
-
+      console.log(`Document processed successfully: ${originalFilename}`);
       return {
         documentId,
         filename: originalFilename,
-        textLength: text.length,
         chunksCount: chunks.length,
-        status: 'processed'
+        textLength: extractedText.length
       };
-
     } catch (error) {
-      console.error('Document processing error:', error);
+      console.error('Error processing document:', error);
       throw error;
     }
   }
 
   async extractText(filePath, fileExtension) {
     try {
-      const fileBuffer = await fs.readFile(filePath);
+      const buffer = await fs.readFile(filePath);
 
       switch (fileExtension) {
         case '.pdf':
-          return await this.extractTextFromPDF(fileBuffer);
+          return await this.extractTextFromPDF(buffer);
         case '.docx':
-          return await this.extractTextFromDOCX(fileBuffer);
+          return await this.extractTextFromDOCX(buffer);
         case '.txt':
-          return await this.extractTextFromTXT(fileBuffer);
+          return await this.extractTextFromTXT(buffer);
         default:
           throw new Error(`Unsupported file format: ${fileExtension}`);
       }
     } catch (error) {
-      console.error('Text extraction error:', error);
-      throw new Error(`Failed to extract text from document: ${error.message}`);
+      console.error('Error extracting text:', error);
+      throw error;
     }
   }
 
   async extractTextFromPDF(buffer) {
-    try {
-      const data = await pdfParse(buffer);
-      return data.text;
-    } catch (error) {
-      throw new Error(`PDF parsing failed: ${error.message}`);
-    }
+    const data = await pdf(buffer);
+    return data.text;
   }
 
   async extractTextFromDOCX(buffer) {
-    try {
-      const result = await mammoth.extractRawText({ buffer });
-      return result.value;
-    } catch (error) {
-      throw new Error(`DOCX parsing failed: ${error.message}`);
-    }
+    const result = await mammoth.extractRawText({ buffer });
+    return result.value;
   }
 
   async extractTextFromTXT(buffer) {
-    try {
-      return buffer.toString('utf-8');
-    } catch (error) {
-      throw new Error(`TXT parsing failed: ${error.message}`);
-    }
+    return buffer.toString('utf-8');
   }
 
-  createChunks(text) {
+  createChunks(text, chunkSize = 1000, overlap = 200) {
     const chunks = [];
-    let startIndex = 0;
+    let start = 0;
 
-    while (startIndex < text.length) {
-      const endIndex = Math.min(startIndex + this.chunkSize, text.length);
-      let chunk = text.substring(startIndex, endIndex);
+    while (start < text.length) {
+      let end = start + chunkSize;
 
-      // Try to break at sentence boundaries
-      if (endIndex < text.length) {
-        const lastPeriod = chunk.lastIndexOf('.');
-        const lastNewline = chunk.lastIndexOf('\n');
-        const breakPoint = Math.max(lastPeriod, lastNewline);
-        
-        if (breakPoint > startIndex + this.chunkSize * 0.7) {
-          chunk = chunk.substring(0, breakPoint + 1);
-          startIndex = startIndex + breakPoint + 1;
-        } else {
-          startIndex = endIndex;
+      // If this isn't the last chunk, try to break at a sentence boundary
+      if (end < text.length) {
+        const nextPeriod = text.indexOf('.', end - 100);
+        const nextNewline = text.indexOf('\n', end - 100);
+
+        if (nextPeriod > end - 100 && nextPeriod < end + 100) {
+          end = nextPeriod + 1;
+        } else if (nextNewline > end - 100 && nextNewline < end + 100) {
+          end = nextNewline + 1;
         }
-      } else {
-        startIndex = endIndex;
       }
 
-      // Clean up the chunk
-      chunk = chunk.trim();
-      if (chunk.length > 0) {
-        chunks.push(chunk);
-      }
+      chunks.push(text.substring(start, end).trim());
+      start = end - overlap;
 
-      // Apply overlap
-      if (startIndex < text.length) {
-        startIndex = Math.max(0, startIndex - this.chunkOverlap);
-      }
+      if (start >= text.length) break;
     }
 
-    return chunks;
+    return chunks.filter(chunk => chunk.length > 0);
   }
 
-  async createDocumentRecord(filename, filePath, fileType, userId) {
+  async createDocumentRecord(filename, filePath, fileType, userEmail) {
     const stats = await fs.stat(filePath);
-    const documentId = require('uuid').v4();
+    const documentId = uuidv4();
+
+    // First, get the user ID by email
+    const userQuery = `SELECT id FROM users WHERE email = $1`;
+    const userResult = await query(userQuery, [userEmail]);
+    
+    if (userResult.rows.length === 0) {
+      throw new Error(`User with email ${userEmail} not found`);
+    }
+    
+    const userId = userResult.rows[0].id;
 
     const insertQuery = `
       INSERT INTO documents (id, user_id, filename, original_filename, file_type, file_size, file_path, status)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING id
     `;
 
-    const result = await query(insertQuery, [
+    await run(insertQuery, [
       documentId,
       userId,
       path.basename(filePath),
@@ -160,7 +137,7 @@ class DocumentProcessor {
       'uploaded'
     ]);
 
-    return result.rows[0].id;
+    return documentId;
   }
 
   async storeChunks(documentId, chunks) {
@@ -170,12 +147,12 @@ class DocumentProcessor {
     `;
 
     for (let i = 0; i < chunks.length; i++) {
-      await query(insertChunkQuery, [documentId, i, chunks[i]]);
+      await run(insertChunkQuery, [documentId, i, chunks[i]]);
     }
   }
 
   async getDocumentById(documentId) {
-    const query = `
+    const sql = `
       SELECT 
         d.*,
         COUNT(dc.id) as chunks_count
@@ -185,25 +162,26 @@ class DocumentProcessor {
       GROUP BY d.id
     `;
 
-    const result = await query(query, [documentId]);
-    return result.rows[0];
+    const result = await query(sql, [documentId]);
+    return result.rows && result.rows.length > 0 ? result.rows[0] : null;
   }
 
-  async getDocumentsByUser(userId, limit = 50, offset = 0) {
-    const query = `
+  async getDocumentsByUser(userEmail, limit = 50, offset = 0) {
+    const sql = `
       SELECT 
         d.*,
         COUNT(dc.id) as chunks_count
       FROM documents d
       LEFT JOIN document_chunks dc ON d.id = dc.document_id
-      WHERE d.user_id = $1
+      JOIN users u ON d.user_id = u.id
+      WHERE u.email = $1
       GROUP BY d.id
       ORDER BY d.created_at DESC
       LIMIT $2 OFFSET $3
     `;
 
-    const result = await query(query, [userId, limit, offset]);
-    return result.rows;
+    const result = await query(sql, [userEmail, limit, offset]);
+    return result.rows || [];
   }
 
   async deleteDocument(documentId) {
@@ -221,7 +199,7 @@ class DocumentProcessor {
     }
 
     // Delete from database (cascade will handle chunks)
-    await query('DELETE FROM documents WHERE id = $1', [documentId]);
+    await run('DELETE FROM documents WHERE id = $1', [documentId]);
 
     return { success: true, documentId };
   }

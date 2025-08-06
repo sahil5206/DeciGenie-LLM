@@ -5,7 +5,7 @@ class GeminiService {
   constructor() {
     this.apiKey = process.env.GEMINI_API_KEY;
     this.baseURL = 'https://generativelanguage.googleapis.com/v1beta/models';
-    this.model = 'gemini-pro';
+    this.model = 'gemini-1.5-pro';
     
     if (!this.apiKey) {
       throw new Error('GEMINI_API_KEY environment variable is required');

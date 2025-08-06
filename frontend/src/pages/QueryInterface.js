@@ -33,7 +33,7 @@ const QueryInterface = () => {
   const fetchRecentQueries = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/queries/recent`
+        `${process.env.REACT_APP_API_URL || '/api'}/queries/recent`
       );
       setRecentQueries(response.data.queries || []);
     } catch (error) {
@@ -44,7 +44,7 @@ const QueryInterface = () => {
   const fetchAvailableDocuments = async () => {
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_DOCUMENT_SERVICE_URL || 'http://localhost:8001'}/api/documents`
+        `${process.env.REACT_APP_DOCUMENT_SERVICE_URL || '/document-api'}/api/documents`
       );
       setAvailableDocuments(response.data.documents || []);
     } catch (error) {
@@ -69,7 +69,7 @@ const QueryInterface = () => {
 
     try {
       const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:8000'}/api/queries`,
+        `${process.env.REACT_APP_API_URL || '/api'}/queries`,
         {
           query: query.trim(),
           context: 'User is asking about insurance coverage and policy details'

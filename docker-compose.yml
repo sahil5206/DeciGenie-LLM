@@ -63,7 +63,7 @@ services:
 
   # Database Service
   database:
-    image: postgres:15-alpine
+    image: pgvector/pgvector:pg15
     ports:
       - "5432:5432"
     environment:

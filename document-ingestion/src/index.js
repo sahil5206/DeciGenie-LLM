@@ -16,6 +16,9 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 const PORT = process.env.PORT || 8001;
 
+// Trust proxy for rate limiting behind nginx
+app.set('trust proxy', 1);
+
 // Create uploads directory if it doesn't exist
 const uploadsDir = process.env.UPLOAD_DIR || path.join(__dirname, '../uploads');
 fs.ensureDirSync(uploadsDir);
@@ -25,8 +28,16 @@ app.use(helmet());
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: [
+    'http://localhost:3000', 
+    'http://127.0.0.1:3000', 
+    'http://frontend:3000',
+    'http://frontend-service:80',
+    'https://decigenie.your-domain.com' // Replace with your actual domain
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 // Rate limiting
@@ -39,6 +50,17 @@ app.use('/api/', limiter);
 
 // Logging
 app.use(morgan('combined'));
+
+// Debug middleware for upload requests
+app.use('/api/documents/upload', (req, res, next) => {
+  console.log('Upload request received:', {
+    method: req.method,
+    headers: req.headers,
+    body: req.body ? 'Body present' : 'No body',
+    files: req.files ? Object.keys(req.files) : 'No files'
+  });
+  next();
+});
 
 // Compression
 app.use(compression());
@@ -53,6 +75,10 @@ app.use('/uploads', express.static(uploadsDir));
 // Routes
 app.use('/api/documents', documentRoutes);
 app.use('/health', healthRoutes);
+
+// Document API routes with prefix (for ingress routing)
+app.use('/document-api/api/documents', documentRoutes);
+app.use('/document-api/health', healthRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

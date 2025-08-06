@@ -55,7 +55,7 @@ const DocumentUpload = () => {
         );
 
         const response = await axios.post(
-          `${process.env.REACT_APP_DOCUMENT_SERVICE_URL || 'http://localhost:8001'}/api/documents/upload`,
+          `${process.env.REACT_APP_DOCUMENT_SERVICE_URL || '/document-api'}/api/documents/upload`,
           formData,
           {
             headers: {

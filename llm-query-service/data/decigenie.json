@@ -1,0 +1,13 @@
+{
+  "queries": [
+    {
+      "id": "23 year old male, brought dog in the office, 1 months old case",
+      "query": "test@example.com",
+      "context": "Processing...",
+      "response": "",
+      "created_at": "2025-08-06T12:50:15.092Z",
+      "updated_at": "2025-08-06T12:50:15.092Z"
+    }
+  ],
+  "documents": []
+}

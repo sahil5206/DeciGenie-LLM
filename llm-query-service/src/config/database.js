@@ -1,153 +1,135 @@
-const sqlite3 = require('sqlite3').verbose();
+const fs = require('fs');
 const path = require('path');
 
-let db;
+let dbPath;
+let data = {
+  queries: [],
+  documents: []
+};
 
 const connectDatabase = async () => {
   try {
-    console.log('Attempting to connect to SQLite database...');
+    console.log('Attempting to connect to JSON database...');
     
     // Create database file in a persistent volume
-    const dbPath = process.env.DATABASE_PATH || '/app/data/decigenie.db';
+    dbPath = process.env.DATABASE_PATH || '/app/data/decigenie.json';
     
     // Ensure the directory exists
     const dbDir = path.dirname(dbPath);
-    const fs = require('fs');
     if (!fs.existsSync(dbDir)) {
       fs.mkdirSync(dbDir, { recursive: true });
     }
     
-    db = new sqlite3.Database(dbPath, (err) => {
-      if (err) {
-        console.error('Error opening database:', err.message);
-        throw err;
+    // Load existing data if file exists
+    if (fs.existsSync(dbPath)) {
+      try {
+        const fileContent = fs.readFileSync(dbPath, 'utf8');
+        data = JSON.parse(fileContent);
+        console.log('Loaded existing data from JSON database');
+      } catch (error) {
+        console.log('Could not load existing data, starting fresh');
+        data = { queries: [], documents: [] };
       }
-      console.log('Connected to SQLite database successfully');
-    });
-
-    // Initialize database tables
-    await initializeTables();
+    } else {
+      console.log('Creating new JSON database file');
+      // Save initial data
+      fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+    }
     
-    console.log('Database connection established successfully');
+    console.log('Connected to JSON database successfully');
   } catch (error) {
     console.error('Database connection failed:', error);
     throw error;
   }
 };
 
-const initializeTables = () => {
-  return new Promise((resolve, reject) => {
-    db.serialize(() => {
-      // Create queries table
-      db.run(`
-        CREATE TABLE IF NOT EXISTS queries (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          query_text TEXT NOT NULL,
-          response_text TEXT,
-          user_id TEXT,
-          document_id TEXT,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `, (err) => {
-        if (err) {
-          console.error('Error creating queries table:', err);
-          reject(err);
-        } else {
-          console.log('Queries table ready');
-        }
-      });
-
-      // Create documents table
-      db.run(`
-        CREATE TABLE IF NOT EXISTS documents (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          filename TEXT NOT NULL,
-          file_path TEXT,
-          file_size INTEGER,
-          upload_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-          processed BOOLEAN DEFAULT 0,
-          content_text TEXT
-        )
-      `, (err) => {
-        if (err) {
-          console.error('Error creating documents table:', err);
-          reject(err);
-        } else {
-          console.log('Documents table ready');
-        }
-      });
-
-      // Create users table
-      db.run(`
-        CREATE TABLE IF NOT EXISTS users (
-          id INTEGER PRIMARY KEY AUTOINCREMENT,
-          user_id TEXT UNIQUE,
-          created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )
-      `, (err) => {
-        if (err) {
-          console.error('Error creating users table:', err);
-          reject(err);
-        } else {
-          console.log('Users table ready');
-          resolve();
-        }
-      });
-    });
-  });
-};
-
-const getDb = () => {
-  if (!db) {
-    throw new Error('Database not connected. Call connectDatabase() first.');
-  }
-  return db;
-};
-
 const query = (sql, params = []) => {
   return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) {
-        reject(err);
+    try {
+      // Simple query implementation for JSON database
+      if (sql.toLowerCase().includes('select')) {
+        if (sql.toLowerCase().includes('queries')) {
+          resolve({ rows: data.queries });
+        } else if (sql.toLowerCase().includes('documents')) {
+          resolve({ rows: data.documents });
+        } else {
+          resolve({ rows: [] });
+        }
       } else {
-        resolve(rows);
+        resolve({ rows: [] });
       }
-    });
+    } catch (error) {
+      reject(error);
+    }
   });
 };
 
 const run = (sql, params = []) => {
   return new Promise((resolve, reject) => {
-    db.run(sql, params, function(err) {
-      if (err) {
-        reject(err);
+    try {
+      // Simple run implementation for JSON database
+      if (sql.toLowerCase().includes('insert into queries')) {
+        const newQuery = {
+          id: params[0] || Date.now().toString(),
+          query: params[1] || '',
+          context: params[2] || '',
+          response: params[3] || '',
+          created_at: params[4] || new Date().toISOString(),
+          updated_at: params[5] || new Date().toISOString()
+        };
+        data.queries.push(newQuery);
+        saveData();
+        resolve({ lastID: newQuery.id });
+      } else if (sql.toLowerCase().includes('insert into documents')) {
+        const newDocument = {
+          id: params[0] || Date.now().toString(),
+          filename: params[1] || '',
+          content: params[2] || '',
+          created_at: params[3] || new Date().toISOString()
+        };
+        data.documents.push(newDocument);
+        saveData();
+        resolve({ lastID: newDocument.id });
+      } else if (sql.toLowerCase().includes('update queries')) {
+        const id = params[0];
+        const queryIndex = data.queries.findIndex(q => q.id === id);
+        if (queryIndex !== -1) {
+          data.queries[queryIndex] = {
+            ...data.queries[queryIndex],
+            response: params[1] || data.queries[queryIndex].response,
+            updated_at: new Date().toISOString()
+          };
+          saveData();
+        }
+        resolve({ changes: 1 });
       } else {
-        resolve({ id: this.lastID, changes: this.changes });
+        resolve({ changes: 0 });
       }
-    });
+    } catch (error) {
+      reject(error);
+    }
   });
 };
 
-const closeDb = async () => {
-  if (db) {
-    return new Promise((resolve, reject) => {
-      db.close((err) => {
-        if (err) {
-          console.error('Error closing database:', err);
-          reject(err);
-        } else {
-          console.log('Database connection closed');
-          resolve();
-        }
-      });
-    });
+const saveData = () => {
+  try {
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error('Error saving data:', error);
+  }
+};
+
+const closeDb = () => {
+  try {
+    saveData();
+    console.log('Database connection closed');
+  } catch (error) {
+    console.error('Error closing database:', error);
   }
 };
 
 module.exports = {
   connectDatabase,
-  getDb,
   query,
   run,
   closeDb

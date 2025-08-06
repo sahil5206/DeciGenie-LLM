@@ -15,8 +15,8 @@ RUN npm ci --only=production
 # Copy app source
 COPY . .
 
-# Create uploads directory
-RUN mkdir -p /app/uploads
+# Create uploads and data directories
+RUN mkdir -p /app/uploads /app/data
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs
