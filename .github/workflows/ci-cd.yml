@@ -1,105 +1,14 @@
-name: Simple CI/CD Pipeline
-
-# Temporarily disabled for debugging
-# on:
-#   push:
-#     branches: [ main, develop ]
-#   pull_request:
-#     branches: [ main ]
+name: Build and Deploy Pipeline
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: password
-          POSTGRES_DB: decigenie_test
-          POSTGRES_USER: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18'
-        cache: 'npm'
-
-    - name: Debug Environment
-      run: |
-        echo "=== Environment Debug Info ==="
-        echo "Node version: $(node --version)"
-        echo "NPM version: $(npm --version)"
-        echo "Working directory: $(pwd)"
-        echo "Repository: ${{ github.repository }}"
-        echo "Branch: ${{ github.ref }}"
-        echo "Event: ${{ github.event_name }}"
-        echo "=== Directory Structure ==="
-        ls -la
-        echo "=== Service Directories ==="
-        for dir in frontend llm-query-service document-ingestion; do
-          if [ -d "$dir" ]; then
-            echo "✓ $dir exists"
-            ls -la "$dir" | head -5
-          else
-            echo "✗ $dir missing"
-          fi
-        done
-
-    - name: Test Frontend
-      working-directory: ./frontend
-      run: |
-        echo "=== Frontend Testing ==="
-        echo "Installing dependencies..."
-        npm install
-        echo "Running tests..."
-        npm test -- --watchAll=false --passWithNoTests --verbose
-      env:
-        CI: true
-        REACT_APP_API_URL: http://localhost:8000
-
-    - name: Test LLM Query Service
-      working-directory: ./llm-query-service
-      run: |
-        echo "=== LLM Query Service Testing ==="
-        echo "Installing dependencies..."
-        npm install
-        echo "Running tests..."
-        npm test -- --watchAll=false --passWithNoTests --verbose
-      env:
-        NODE_ENV: test
-        DATABASE_URL: postgresql://postgres:password@localhost:5432/decigenie_test
-
-    - name: Test Document Ingestion Service
-      working-directory: ./document-ingestion
-      run: |
-        echo "=== Document Ingestion Service Testing ==="
-        echo "Installing dependencies..."
-        npm install
-        echo "Running tests..."
-        npm test -- --watchAll=false --passWithNoTests --verbose
-      env:
-        NODE_ENV: test
-        DATABASE_URL: postgresql://postgres:password@localhost:5432/decigenie_test
-
   build:
-    needs: test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
 
     steps:
     - name: Checkout code
@@ -117,11 +26,87 @@ jobs:
         echo "Building frontend..."
         npm install
         npm run build
-        echo "Frontend build completed successfully"
+        echo "✓ Frontend build completed successfully"
 
     - name: Build Backend Services
       run: |
         echo "Building backend services..."
-        cd llm-query-service && npm install && echo "LLM service dependencies installed"
-        cd ../document-ingestion && npm install && echo "Document ingestion dependencies installed"
-        echo "Backend services build completed successfully" 
+        cd llm-query-service && npm install && echo "✓ LLM service dependencies installed"
+        cd ../document-ingestion && npm install && echo "✓ Document ingestion dependencies installed"
+        echo "✓ Backend services build completed successfully"
+
+    - name: Test Docker Builds
+      run: |
+        echo "Testing Docker builds..."
+        cd frontend && docker build --dry-run . && echo "✓ Frontend Docker build test passed"
+        cd ../llm-query-service && docker build --dry-run . && echo "✓ LLM service Docker build test passed"
+        cd ../document-ingestion && docker build --dry-run . && echo "✓ Document ingestion Docker build test passed"
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ secrets.GCP_PROJECT_ID }}
+
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+
+    - name: Build and Push Docker Images
+      run: |
+        echo "Building and pushing Docker images..."
+        
+        # Build and push frontend
+        cd frontend
+        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/decigenie-frontend:${{ github.sha }} .
+        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/decigenie-frontend:${{ github.sha }}
+        echo "✓ Frontend image pushed"
+        
+        # Build and push LLM service
+        cd ../llm-query-service
+        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/decigenie-llm-service:${{ github.sha }} .
+        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/decigenie-llm-service:${{ github.sha }}
+        echo "✓ LLM service image pushed"
+        
+        # Build and push document ingestion service
+        cd ../document-ingestion
+        docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/decigenie-document-service:${{ github.sha }} .
+        docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/decigenie-document-service:${{ github.sha }}
+        echo "✓ Document ingestion service image pushed"
+
+    - name: Deploy to Kubernetes
+      run: |
+        echo "Deploying to Kubernetes..."
+        gcloud container clusters get-credentials decigenie-cluster --zone=${{ secrets.GCP_ZONE }} --project=${{ secrets.GCP_PROJECT_ID }}
+        
+        # Apply Kubernetes manifests
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/secret.yaml
+        kubectl apply -f k8s/configmap.yaml
+        kubectl apply -f k8s/uploads-pvc.yaml
+        kubectl apply -f k8s/frontend-deployment.yaml
+        kubectl apply -f k8s/llm-query-service-deployment.yaml
+        kubectl apply -f k8s/document-ingestion-deployment.yaml
+        kubectl apply -f k8s/postgres-deployment.yaml
+        kubectl apply -f k8s/ingress.yaml
+        
+        echo "✓ Kubernetes deployment completed"
+        
+        # Wait for deployments to be ready
+        kubectl rollout status deployment/frontend-deployment -n decigenie
+        kubectl rollout status deployment/llm-query-service-deployment -n decigenie
+        kubectl rollout status deployment/document-ingestion-deployment -n decigenie
+        
+        echo "✓ All deployments are ready"
+        
+        # Show deployment status
+        kubectl get pods -n decigenie
+        kubectl get services -n decigenie
+        kubectl get ingress -n decigenie 

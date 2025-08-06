@@ -937,27 +937,45 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 🤝 Contributing
+<img width="1920" height="1080" alt="Screenshot (37)" src="https://github.com/user-attachments/assets/a7a1c26e-192d-4475-8f60-13055480193b" />
+<img width="1920" height="1080" alt="Screenshot (38)" src="https://github.com/user-attachments/assets/a58c0a2d-1c6c-4f9c-92de-ee4bf5d7a3c8" />
+<img width="1920" height="1080" alt="Screenshot (39)" src="https://github.com/user-attachments/assets/976efc60-adb5-46b7-a8d7-c607394bb5fc" />
+<img width="1920" height="1080" alt="Screenshot (41)" src="https://github.com/user-attachments/assets/d2bc9c85-821f-4331-8a86-ff6ee0c069f5" />
+<img width="1920" height="1080" alt="Screenshot (42)" src="https://github.com/user-attachments/assets/c90c1734-c8e2-4568-bf8c-c2542ff92e4e" />
+<img width="1920" height="1080" alt="Screenshot (43)" src="https://github.com/user-attachments/assets/c8c254d9-8822-44ef-b7ae-1831d316a3a5" />
+<img width="1920" height="1080" alt="Screenshot (44)" src="https://github.com/user-attachments/assets/9f10d3d8-e3d6-411e-8cd3-9b2d9a8643f8" />
+<img width="1920" height="1080" alt="Screenshot (46)" src="https://github.com/user-attachments/assets/c982d52e-f6ae-464d-8daa-530f0c220ead" />
+<img width="1920" height="1080" alt="Screenshot (47)" src="https://github.com/user-attachments/assets/7f880662-6383-44a8-b441-01c7d0602e1b" />
+<img width="895" height="286" alt="Screenshot (48)" src="https://github.com/user-attachments/assets/b25aab02-0cb3-4399-a133-86fd566164f7" />
+<img width="651" height="504" alt="Screenshot (49)" src="https://github.com/user-attachments/assets/d98a725e-3dfd-4c2b-a541-1f5e75b7c34d" />
+<img width="1920" height="1080" alt="Screenshot (50)" src="https://github.com/user-attachments/assets/16193af5-cffc-4339-9eeb-b86f8ace396f" />
+<img width="1920" height="1080" alt="Screenshot (51)" src="https://github.com/user-attachments/assets/7f384f55-26cb-4089-8766-5d6c71122cab" />
+<img width="916" height="224" alt="Screenshot (52)" src="https://github.com/user-attachments/assets/b182414f-ac6d-4c0c-8e0e-efd1edd1ef9b" />
+<img width="530" height="556" alt="Screenshot (53)" src="https://github.com/user-attachments/assets/1a6a0cea-cabd-4ac2-a574-36d7a0d89805" />
+<img width="565" height="222" alt="Screenshot (54)" src="https://github.com/user-attachments/assets/1ce3a0d2-26b4-4420-af88-e74a00553bad" />
+<img width="690" height="495" alt="Screenshot (55)" src="https://github.com/user-attachments/assets/bb06dcf3-fa40-4ca3-9f42-fa06fdc097b4" />
+<img width="640" height="521" alt="Screenshot (56)" src="https://github.com/user-attachments/assets/a67fa187-b320-4034-975f-65d05c1d6a5d" />
+<img width="886" height="567" alt="Screenshot (57)" src="https://github.com/user-attachments/assets/c045d64a-4e6f-4616-8335-fdace9559202" />
 
-We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
 
----
 
-## 📞 Support
 
-- **Documentation**: [Wiki](https://github.com/your-org/decigenie-llm/wiki)
-- **Issues**: [GitHub Issues](https://github.com/your-org/decigenie-llm/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/decigenie-llm/discussions)
-- **Email**: support@decigenie.com
 
----
 
-<div align="center">
 
-**Built with ❤️ by the DeciGenie Team**
 
-[![GitHub stars](https://img.shields.io/github/stars/your-org/decigenie-llm?style=social)](https://github.com/your-org/decigenie-llm)
-[![GitHub forks](https://img.shields.io/github/forks/your-org/decigenie-llm?style=social)](https://github.com/your-org/decigenie-llm)
-[![GitHub issues](https://img.shields.io/github/issues/your-org/decigenie-llm)](https://github.com/your-org/decigenie-llm/issues)
 
-</div> 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
