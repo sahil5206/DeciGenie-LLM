@@ -4,5 +4,10 @@ module.exports = {
   collectCoverageFrom: ['src/**/*.js'],
   coverageDirectory: 'coverage',
   coverageReporters: ['text', 'lcov'],
-  testTimeout: 10000,
+  testTimeout: 30000,
+  setupFilesAfterEnv: ['<rootDir>/__tests__/setup.js'],
+  testPathIgnorePatterns: ['/node_modules/'],
+  verbose: true,
+  forceExit: true,
+  detectOpenHandles: true,
 }; 

@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders without crashing', () => {
+test('renders app without crashing', () => {
   render(<App />);
-  // Basic test to ensure the app renders
+  // Basic test to ensure app renders
   expect(document.body).toBeInTheDocument();
 }); 

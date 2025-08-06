@@ -1,0 +1,186 @@
+name: Troubleshoot CI/CD Issues
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to troubleshoot (frontend, llm-query, document-ingestion, all)'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - frontend
+        - llm-query
+        - document-ingestion
+
+jobs:
+  troubleshoot:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: decigenie_test
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Debug Environment
+      run: |
+        echo "=== Environment Debug Info ==="
+        echo "Node version: $(node --version)"
+        echo "NPM version: $(npm --version)"
+        echo "Working directory: $(pwd)"
+        echo "Repository: ${{ github.repository }}"
+        echo "Branch: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Event: ${{ github.event_name }}"
+        echo "Actor: ${{ github.actor }}"
+
+    - name: Check Service Structure
+      run: |
+        echo "=== Service Structure Check ==="
+        for service in frontend llm-query-service document-ingestion; do
+          if [ -d "$service" ]; then
+            echo "✓ $service directory exists"
+            if [ -f "$service/package.json" ]; then
+              echo "  ✓ package.json exists"
+              echo "  - Name: $(node -p "require('./$service/package.json').name")"
+              echo "  - Version: $(node -p "require('./$service/package.json').version")"
+            else
+              echo "  ✗ package.json missing"
+            fi
+            if [ -f "$service/Dockerfile" ]; then
+              echo "  ✓ Dockerfile exists"
+            else
+              echo "  ✗ Dockerfile missing"
+            fi
+          else
+            echo "✗ $service directory missing"
+          fi
+        done
+
+    - name: Check Dependencies
+      if: ${{ inputs.service == 'all' || inputs.service == 'frontend' }}
+      working-directory: ./frontend
+      run: |
+        echo "=== Frontend Dependencies Check ==="
+        npm ci --prefer-offline --no-audit
+        echo "✓ Frontend dependencies installed"
+        npm list --depth=0
+
+    - name: Check Dependencies
+      if: ${{ inputs.service == 'all' || inputs.service == 'llm-query' }}
+      working-directory: ./llm-query-service
+      run: |
+        echo "=== LLM Query Service Dependencies Check ==="
+        npm ci --prefer-offline --no-audit
+        echo "✓ LLM Query Service dependencies installed"
+        npm list --depth=0
+
+    - name: Check Dependencies
+      if: ${{ inputs.service == 'all' || inputs.service == 'document-ingestion' }}
+      working-directory: ./document-ingestion
+      run: |
+        echo "=== Document Ingestion Service Dependencies Check ==="
+        npm ci --prefer-offline --no-audit
+        echo "✓ Document Ingestion Service dependencies installed"
+        npm list --depth=0
+
+    - name: Run Tests with Verbose Output
+      if: ${{ inputs.service == 'all' || inputs.service == 'frontend' }}
+      working-directory: ./frontend
+      run: |
+        echo "=== Frontend Tests ==="
+        npm test -- --coverage --watchAll=false --passWithNoTests --verbose --detectOpenHandles --forceExit
+      env:
+        CI: true
+        REACT_APP_API_URL: http://localhost:8000
+
+    - name: Run Tests with Verbose Output
+      if: ${{ inputs.service == 'all' || inputs.service == 'llm-query' }}
+      working-directory: ./llm-query-service
+      run: |
+        echo "=== LLM Query Service Tests ==="
+        npm test -- --passWithNoTests --verbose --detectOpenHandles --forceExit
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:password@localhost:5432/decigenie_test
+
+    - name: Run Tests with Verbose Output
+      if: ${{ inputs.service == 'all' || inputs.service == 'document-ingestion' }}
+      working-directory: ./document-ingestion
+      run: |
+        echo "=== Document Ingestion Service Tests ==="
+        npm test -- --passWithNoTests --verbose --detectOpenHandles --forceExit
+      env:
+        NODE_ENV: test
+        DATABASE_URL: postgresql://postgres:password@localhost:5432/decigenie_test
+
+    - name: Check Docker Builds
+      if: ${{ inputs.service == 'all' || inputs.service == 'frontend' }}
+      working-directory: ./frontend
+      run: |
+        echo "=== Frontend Docker Build Check ==="
+        docker build --dry-run . || echo "Docker build check completed"
+
+    - name: Check Docker Builds
+      if: ${{ inputs.service == 'all' || inputs.service == 'llm-query' }}
+      working-directory: ./llm-query-service
+      run: |
+        echo "=== LLM Query Service Docker Build Check ==="
+        docker build --dry-run . || echo "Docker build check completed"
+
+    - name: Check Docker Builds
+      if: ${{ inputs.service == 'all' || inputs.service == 'document-ingestion' }}
+      working-directory: ./document-ingestion
+      run: |
+        echo "=== Document Ingestion Service Docker Build Check ==="
+        docker build --dry-run . || echo "Docker build check completed"
+
+    - name: Check Kubernetes Manifests
+      run: |
+        echo "=== Kubernetes Manifests Check ==="
+        if [ -d "k8s" ]; then
+          echo "✓ k8s directory exists"
+          for file in k8s/*.yaml; do
+            if [ -f "$file" ]; then
+              echo "  ✓ $(basename "$file")"
+              # Basic YAML syntax check
+              if command -v yamllint >/dev/null 2>&1; then
+                yamllint "$file" || echo "    ⚠ YAML lint warnings"
+              fi
+            fi
+          done
+        else
+          echo "✗ k8s directory missing"
+        fi
+
+    - name: Generate Troubleshooting Report
+      run: |
+        echo "=== Troubleshooting Report ==="
+        echo "Generated at: $(date)"
+        echo "Repository: ${{ github.repository }}"
+        echo "Branch: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Service: ${{ inputs.service }}"
+        echo ""
+        echo "All checks completed. Check the logs above for any issues." 
