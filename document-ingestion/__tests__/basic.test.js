@@ -1,9 +1,8 @@
-describe('Basic Document Ingestion Service Tests', () => {
-  test('should have basic functionality', () => {
-    expect(1 + 1).toBe(2);
-  });
+// Simple test to ensure Jest is working
+test('basic test', () => {
+  expect(1 + 1).toBe(2);
+});
 
-  test('should be able to import modules', () => {
-    expect(require('express')).toBeDefined();
-  });
+test('environment is working', () => {
+  expect(process.env.NODE_ENV).toBeDefined();
 }); 

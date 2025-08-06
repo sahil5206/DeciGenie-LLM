@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">60% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>6/10</span>
+                <span class='fraction'>0/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">50% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/6</span>
+                <span class='fraction'>0/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">33.33% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/6</span>
+                <span class='fraction'>0/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">60% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>6/10</span>
+                <span class='fraction'>0/10</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -187,18 +187,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -226,7 +226,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -307,18 +307,18 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 &nbsp;
-const Header = () =&gt; {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const location = useLocation();
+const Header = <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >()</span> =&gt; {</span>
+  const [mobileMenuOpen, setMobileMenuOpen] = <span class="cstat-no" title="statement not covered" >useState(false);</span>
+  const location = <span class="cstat-no" title="statement not covered" >useLocation();</span>
 &nbsp;
-  const navigation = [
+  const navigation = <span class="cstat-no" title="statement not covered" >[</span>
     { name: 'Home', href: '/' },
     { name: 'Upload Documents', href: '/upload' },
     { name: 'Query Documents', href: '/query' },
     { name: 'Results', href: '/results' },
   ];
 &nbsp;
-  return (
+<span class="cstat-no" title="statement not covered" >  return (</span>
     &lt;header className="bg-white shadow-sm border-b border-gray-200"&gt;
       &lt;nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Global"&gt;
         &lt;div className="flex lg:flex-1"&gt;
@@ -345,8 +345,8 @@ const Header = () =&gt; {
         &lt;/div&gt;
         
         &lt;div className="hidden lg:flex lg:gap-x-12"&gt;
-          {navigation.map((item) =&gt; (
-            &lt;Link
+          {navigation.map(<span class="fstat-no" title="function not covered" >(i</span>tem) =&gt; (
+<span class="cstat-no" title="statement not covered" >            &lt;Link</span>
               key={item.name}
               to={item.href}
               className={`text-sm font-semibold leading-6 transition-colors duration-200 ${
@@ -369,7 +369,7 @@ const Header = () =&gt; {
       
       {/* Mobile menu */}
       {mobileMenuOpen &amp;&amp; (
-<span class="branch-1 cbranch-no" title="branch not covered" >        &lt;div className="lg:hidden"&gt;</span>
+        &lt;div className="lg:hidden"&gt;
           &lt;div className="fixed inset-0 z-50" /&gt;
           &lt;div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10"&gt;
             &lt;div className="flex items-center justify-between"&gt;
@@ -430,7 +430,7 @@ export default Header; </pre></td></tr></table></pre>
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-08-06T16:24:48.979Z
+                at 2025-08-06T16:32:14.695Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

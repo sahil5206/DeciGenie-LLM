@@ -1,4 +1,4 @@
-name: Robust CI/CD Pipeline
+name: Simple CI/CD Pipeline
 
 on:
   push:
@@ -44,58 +44,50 @@ jobs:
         echo "Repository: ${{ github.repository }}"
         echo "Branch: ${{ github.ref }}"
         echo "Event: ${{ github.event_name }}"
-
-    - name: Check Service Structure
-      run: |
-        echo "=== Service Structure Check ==="
-        for service in frontend llm-query-service document-ingestion; do
-          if [ -d "$service" ]; then
-            echo "✓ $service directory exists"
-            if [ -f "$service/package.json" ]; then
-              echo "  ✓ package.json exists"
-              echo "  - Name: $(node -p "require('./$service/package.json').name")"
-              echo "  - Version: $(node -p "require('./$service/package.json').version")"
-              echo "  - Test script: $(node -p "require('./$service/package.json').scripts.test || 'Not found'")"
-            else
-              echo "  ✗ package.json missing"
-            fi
+        echo "=== Directory Structure ==="
+        ls -la
+        echo "=== Service Directories ==="
+        for dir in frontend llm-query-service document-ingestion; do
+          if [ -d "$dir" ]; then
+            echo "✓ $dir exists"
+            ls -la "$dir" | head -5
           else
-            echo "✗ $service directory missing"
+            echo "✗ $dir missing"
           fi
         done
 
-    - name: Install and Test Frontend
+    - name: Test Frontend
       working-directory: ./frontend
       run: |
         echo "=== Frontend Testing ==="
-        npm ci --prefer-offline --no-audit || npm install
-        echo "Frontend dependencies installed successfully"
-        echo "Running frontend tests..."
-        npm test || echo "Frontend tests failed but continuing..."
+        echo "Installing dependencies..."
+        npm install
+        echo "Running tests..."
+        npm test -- --watchAll=false --passWithNoTests --verbose
       env:
         CI: true
         REACT_APP_API_URL: http://localhost:8000
 
-    - name: Install and Test LLM Query Service
+    - name: Test LLM Query Service
       working-directory: ./llm-query-service
       run: |
         echo "=== LLM Query Service Testing ==="
-        npm ci --prefer-offline --no-audit || npm install
-        echo "LLM Query Service dependencies installed successfully"
-        echo "Running LLM Query Service tests..."
-        npm test -- --passWithNoTests --verbose --detectOpenHandles --forceExit || echo "LLM Query Service tests failed but continuing..."
+        echo "Installing dependencies..."
+        npm install
+        echo "Running tests..."
+        npm test -- --watchAll=false --passWithNoTests --verbose
       env:
         NODE_ENV: test
         DATABASE_URL: postgresql://postgres:password@localhost:5432/decigenie_test
 
-    - name: Install and Test Document Ingestion Service
+    - name: Test Document Ingestion Service
       working-directory: ./document-ingestion
       run: |
         echo "=== Document Ingestion Service Testing ==="
-        npm ci --prefer-offline --no-audit || npm install
-        echo "Document Ingestion Service dependencies installed successfully"
-        echo "Running Document Ingestion Service tests..."
-        npm test -- --passWithNoTests --verbose --detectOpenHandles --forceExit || echo "Document Ingestion Service tests failed but continuing..."
+        echo "Installing dependencies..."
+        npm install
+        echo "Running tests..."
+        npm test -- --watchAll=false --passWithNoTests --verbose
       env:
         NODE_ENV: test
         DATABASE_URL: postgresql://postgres:password@localhost:5432/decigenie_test
@@ -119,32 +111,13 @@ jobs:
       working-directory: ./frontend
       run: |
         echo "Building frontend..."
-        npm ci || npm install
+        npm install
         npm run build
         echo "Frontend build completed successfully"
 
     - name: Build Backend Services
       run: |
         echo "Building backend services..."
-        cd llm-query-service && npm ci && echo "LLM service dependencies installed"
-        cd ../document-ingestion && npm ci && echo "Document ingestion dependencies installed"
-        echo "Backend services build completed successfully"
-
-    - name: Test Docker Builds (Dry Run)
-      run: |
-        echo "=== Testing Docker Builds ==="
-        
-        # Test frontend build
-        echo "Testing frontend Docker build..."
-        cd frontend
-        docker build --dry-run . || echo "Frontend Docker build check completed"
-        
-        # Test LLM service build
-        echo "Testing LLM service Docker build..."
-        cd ../llm-query-service
-        docker build --dry-run . || echo "LLM service Docker build check completed"
-        
-        # Test document ingestion build
-        echo "Testing document ingestion Docker build..."
-        cd ../document-ingestion
-        docker build --dry-run . || echo "Document ingestion Docker build check completed" 
+        cd llm-query-service && npm install && echo "LLM service dependencies installed"
+        cd ../document-ingestion && npm install && echo "Document ingestion dependencies installed"
+        echo "Backend services build completed successfully" 
