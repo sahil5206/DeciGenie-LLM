@@ -960,8 +960,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 <img width="886" height="567" alt="Screenshot (57)" src="https://github.com/user-attachments/assets/c045d64a-4e6f-4616-8335-fdace9559202" />
 
 
-##Don't Compete...Let's Collaborate...
-##BE HAPPY...
+**Don't Compete...Let's Collaborate...**
+**BE HAPPY...**
 
 
 
